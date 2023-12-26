@@ -1,3 +1,6 @@
+https://gpt-chatbot.ru/chatgpt-3-5-besplatno-i-bez-registracii
+https://beta.theb.ai/home
+https://trychatgpt.ru/
 Реализовать консольный калькулятор
 Необходимо реализовать консольный калькулятор, позволяющий выполнять такие арифметические операции, как:
 сложение 
