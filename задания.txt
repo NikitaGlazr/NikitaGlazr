@@ -1,0 +1,2218 @@
+Реализовать консольный калькулятор
+Необходимо реализовать консольный калькулятор, позволяющий выполнять такие арифметические операции, как:
+сложение 
+вычитание
+деление 
+умножение 
+возведение в степень
+	Все действия должны быть обернуты в блоки tryexcept и при вводе некорректных данных необходимо выводить в консоль сообщение для пользователя с описанием ошибки.
+
+
+def calculator():
+    try:
+        num1 = float(input("\nВведите первое число: "))
+        num2 = float(input("Введите второе число: "))
+        operation = input("Введите операцию \n"
+                          "Сумма: +\n"
+                          "Вычитание: -\n"
+                          "Умножение: *\n"
+                          "Деление: /\n"
+                          "Возведение в степень: ** \n"
+                          "Ваш выбор: ")
+
+        if operation == "+":
+            result = num1 + num2
+            print("Результат:", result)
+        elif operation == "-":
+            result = num1 - num2
+            print("Результат:", result)
+        elif operation == "*":
+            result = num1 * num2
+            print("Результат:", result)
+        elif operation == "/":
+            if num2 == 0:
+                raise ZeroDivisionError("Деление на ноль!")
+            else:
+                result = num1 / num2
+                print("Результат:", result)
+        elif operation == "**":
+            if num2 > 1000:
+                raise ValueError("Степень слишком велика!")
+            result = num1 ** num2
+            print("Результат:", result)
+        else:
+            raise ValueError("Некорректная операция!")
+
+    except ValueError as ve:
+        print("Ошибка:", ve)
+    except ZeroDivisionError as zdve:
+        print("Ошибка:", zdve)
+
+while True:
+    calculator()
+    choice = input("Хотите продолжить? (Введите 'n' для выхода): ")
+    if choice.lower() == "n":
+        break
+
+_____________________________________________________________________________________________________________
+
+Клеинт-серверная чать, без асинхронной реализации:
+Сервер
+import socket
+import threading
+
+# Создание сокета
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Установка адреса и порта сервера
+server_address = ('localhost', 12345)
+server_socket.bind(server_address)
+
+# Ожидание подключения клиентов
+server_socket.listen(2)
+print('The server is running and waiting for clients to connect...')
+
+# Список клиентов
+clients = []
+
+# Функция для обработки сообщений от клиентов
+def handle_client(client_socket, client_address):
+    while True:
+        try:
+            # Получение сообщения от клиента
+            message = client_socket.recv(1024).decode('utf-8')
+            if message:
+                print(f'Message from {client_address}: {message}')
+                # Отправка сообщения всем клиентам, кроме отправляющего
+                for client in clients:
+                    if client != client_socket:
+                        client.sendall(message.encode('utf-8'))
+            else:
+                # Удаление клиента из списка при отключении
+                clients.remove(client_socket)
+                print(f'Client {client_address} disconnected')
+                break
+        except:
+            # Удаление клиента из списка при ошибке
+            clients.remove(client_socket)
+            print(f'Client {client_address} disconnected')
+            break
+
+# Основной цикл для принятия подключений
+while True:
+    # Принятие подключения клиента
+    client_socket, client_address = server_socket.accept()
+    print(f'Client {client_address} connected')
+
+    # Добавление клиента в список
+    clients.append(client_socket)
+
+    # Запуск потока для обработки сообщений от клиента
+    client_thread = threading.Thread(target=handle_client, args=(client_socket, client_address))
+    client_thread.start()
+
+
+1Клиент:
+import socket
+import threading
+
+# Создание сокета
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Установка адреса и порта сервера
+server_address = ('localhost', 12345)
+client_socket.connect(server_address)
+
+# Функция для отправки сообщений серверу
+def send_message():
+    while True:
+        message = input("Enter a message: \n")
+        client_socket.sendall(message.encode('utf-8'))
+
+# Функция для получения сообщений от сервера
+def receive_message():
+    while True:
+        message = client_socket.recv(1024).decode('utf-8')
+        print(f'\nMessage received: {message}')
+        print("Enter a message: ")
+
+# Запуск потоков для отправки и получения сообщений
+send_thread = threading.Thread(target=send_message)
+receive_thread = threading.Thread(target=receive_message)
+send_thread.start()
+receive_thread.start()
+
+
+2Клиент:
+import socket
+import threading
+
+# Создание сокета
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Установка адреса и порта сервера
+server_address = ('localhost', 12345)
+client_socket.connect(server_address)
+
+# Функция для отправки сообщений серверу
+def send_message():
+    while True:
+        message = input("Enter a message: \n")
+        client_socket.sendall(message.encode('utf-8'))
+
+# Функция для получения сообщений от сервера
+def receive_message():
+    while True:
+        message = client_socket.recv(1024).decode('utf-8')
+        print(f'\nMessage received: {message}')
+        print("Enter a message: ")
+
+# Запуск потоков для отправки и получения сообщений
+send_thread = threading.Thread(target=send_message)
+receive_thread = threading.Thread(target=receive_message)
+send_thread.start()
+receive_thread.start()
+
+
+______________________________________________________________________________________________
+
+
+Для добавления асинхронизации в данный код можно использовать модуль `asyncio` вместо `threading` и переписать код с использованием асинхронных функций и сокетов.
+
+Вот пример модифицированного кода с использованием `asyncio`:
+
+```python
+import asyncio
+
+# Создание сокета
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Установка адреса и порта сервера
+server_address = ('localhost', 12345)
+server_socket.bind(server_address)
+
+# Ожидание подключения клиентов
+server_socket.listen(2)
+print('The server is running and waiting for clients to connect...')
+
+# Список клиентов
+clients = []
+
+# Функция для обработки сообщений от клиентов
+async def handle_client(client_socket, client_address):
+    while True:
+        try:
+            # Получение сообщения от клиента
+            message = await loop.sock_recv(client_socket, 1024).decode('utf-8')
+            if message:
+                print(f'Message from {client_address}: {message}')
+                # Отправка сообщения всем клиентам, кроме отправляющего
+                for client in clients:
+                    if client != client_socket:
+                        await loop.sock_sendall(client, message.encode('utf-8'))
+            else:
+                # Удаление клиента из списка при отключении
+                clients.remove(client_socket)
+                print(f'Client {client_address} disconnected')
+                break
+        except:
+            # Удаление клиента из списка при ошибке
+            clients.remove(client_socket)
+            print(f'Client {client_address} disconnected')
+            break
+
+# Функция для принятия подключений
+async def accept_clients():
+    while True:
+        # Принятие подключения клиента
+        client_socket, client_address = await loop.sock_accept(server_socket)
+        print(f'Client {client_address} connected')
+
+        # Добавление клиента в список
+        clients.append(client_socket)
+
+        # Запуск асинхронной задачи для обработки сообщений от клиента
+        asyncio.create_task(handle_client(client_socket, client_address))
+
+# Создание цикла событий
+loop = asyncio.get_event_loop()
+
+# Запуск асинхронной задачи для принятия подключений
+asyncio.create_task(accept_clients())
+
+# Запуск цикла событий
+loop.run_forever()
+```
+
+Аналогично, код клиента также нужно переписать с использованием асинхронных функций и сокетов.
+
+Модифицированный код первого клиента:
+
+```python
+import asyncio
+
+# Создание сокета
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Установка адреса и порта сервера
+server_address = ('localhost', 12345)
+client_socket.connect(server_address)
+
+# Функция для отправки сообщений серверу
+async def send_message():
+    while True:
+        message = input("Enter a message: \n")
+        await loop.sock_sendall(client_socket, message.encode('utf-8'))
+
+# Функция для получения сообщений от сервера
+async def receive_message():
+    while True:
+        message = await loop.sock_recv(client_socket, 1024).decode('utf-8')
+        print(f'\nMessage received: {message}')
+        print("Enter a message: ")
+
+# Создание цикла событий
+loop = asyncio.get_event_loop()
+
+# Запуск асинхронных задач для отправки и получения сообщений
+asyncio.create_task(send_message())
+asyncio.create_task(receive_message())
+
+# Запуск цикла событий
+loop.run_forever()
+```
+
+Модифицированный код второго клиента имеет такую же структуру как и первый клиент.
+
+
+
+
+
+______________________________________________________________________________________________
+Режим	Описание
+r	Только для чтения.
+w	Только для записи. Создаст новый файл, если не найдет с указанным именем.
+rb	Только для чтения (бинарный).
+wb	Только для записи (бинарный). Создаст новый файл, если не найдет с указанным именем.
+r+	Для чтения и записи.
+rb+	Для чтения и записи (бинарный).
+w+	Для чтения и записи. Создаст новый файл для записи, если не найдет с указанным именем.
+wb+	Для чтения и записи (бинарный). Создаст новый файл для записи, если не найдет с указанным именем.
+a	Откроет для добавления нового содержимого. Создаст новый файл для записи, если не найдет с указанным именем.
+a+	Откроет для добавления нового содержимого. Создаст новый файл для чтения записи, если не найдет с указанным именем.
+ab	Откроет для добавления нового содержимого (бинарный). Создаст новый файл для записи, если не найдет с указанным именем.
+ab+	Откроет для добавления нового содержимого (бинарный). Создаст новый файл для чтения записи, если не найдет с указанным именем.
+
+
+
+
+
+Реализовать механизм записи данных пользователя в текстовый файл с последующим чтением этих данных. 
+Пользователь должен иметь возможность вводить данные в консоль в формате id last_name first_name middle_name age.
+После каждого введенного сообщения данные должны быть сохранены в текстовый файл. Если пользователь вводит команду 
+showdata* , все данные  из файла должны быть выведены в консоль в видетаблицы:
+id	last_name	first_name	middle_name	age
+1	Ivanov	Ivan	Ivanovich	27
+2	Stepanov	Anton	Mikhailovich	56
+…	…	…	…	…
+n + 1	Fedorov	Nikita	Stepanovich	35
+
+	Если пользователь вводит команду showdata {integernumber}, например, 
+showdata 10, то необходимо вывести первые 10 записей из текстового файла в формате таблицы представленной выше.
+
+
+
+# -*- coding: utf-8 -*-
+
+def get_last_id():
+    with open("userdata.txt", "r") as file:
+        lines = file.readlines()
+        if len(lines) > 1:
+            last_line = lines[-1].strip()
+            last_id = int(last_line.split()[0])
+        else:
+            last_id = 0
+    return last_id
+
+def write_data_to_file(data):
+    last_id = get_last_id()
+    new_id = last_id + 1
+    new_data = f"{new_id} {data}"
+    with open("userdata.txt", "a") as file:
+        file.write(new_data + '\n')
+    print("Data has been written to the file.")
+
+def show_data(limit=None):
+    with open("userdata.txt", "r") as file:
+        lines = file.readlines()
+        header = lines[0]
+        data = lines[1:]
+        
+        if limit is not None and limit < len(data):
+            data = data[:limit]
+        
+        print(header.strip())
+        for line in data:
+            print(line.strip())
+
+
+n = int(input("Enter the number of iterations: "))
+count = 0
+
+header_line = "id\tlast_name\tfirst_name\tmiddle_name\tage"
+with open("userdata.txt", "w") as file:
+    file.write(header_line + '\n')
+
+while count < n:
+    strint = input("showdata* or write line with data: ")
+    
+    if strint == "showdata*":
+        show_data()
+    elif strint.startswith("showdata "):
+        try:
+            limit = int(strint.split()[1])
+            show_data(limit)
+        except ValueError:
+            print("Incorrect input. Please enter the 'showdata' command with an integer.")
+    else:
+        command = input("Enter the user data in the format id last_name first_name middle_name age: ")
+        write_data_to_file(command)
+        count += 1
+
+Первые три функции отвечают за чтение данных из файла и запись данных в файл:
+
+get_last_id(): Эта функция открывает файл "userdata.txt" в режиме чтения ("r") и считывает все строки из файла. Если файл содержит более одной строки (то есть есть данные кроме заголовка), она извлекает последнюю строку, удаляет лишние пробелы и возращает значение id из этой строки. Если файл пуст или содержит только заголовок, возвращает 0.
+
+write_data_to_file(data): Эта функция вызывает get_last_id() для получения последнего id из файла и увеличивает его на 1, чтобы получить новое id для записи данных. Затем она форматирует данные в строку, добавляя новое id в начало строки. Затем она открывает файл "userdata.txt" в режиме добавления ("a") и записывает новую строку данных, завершая его символом новой строки. Затем функция выводит сообщение о том, что данные были записаны в файл.
+
+show_data(limit=None): Эта функция открывает файл "userdata.txt" в режиме чтения ("r") и считывает все строки из файла. Заголовок (первая строка) сохраняется отдельно, а данные (все строки после заголовка) сохраняются в списке. Если задан аргумент limit, функция ограничивает вывод только указанным количеством строк данных. Затем функция печатает заголовок и каждую строку данных на отдельной строке.
+
+Остальная часть кода отвечает за основной поток выполнения:
+
+Пользователю предлагается ввести количество итераций (n).
+
+Затем создается строка header_line, содержащая заголовки полей.
+
+Файл "userdata.txt" перезаписывается с заголовками, чтобы очистить его содержимое.
+
+Затем запускается цикл while, который продолжается до тех пор, пока count не достигнет значения n.
+
+В каждой итерации цикла пользователю предлагается ввести команду.
+
+Если введена команда "showdata*", вызывается функция show_data(), которая отображает все данные из файла.
+
+Если введена команда "showdata <limit>", где <limit> - это число, вызывается функция show_data(limit), которая отображает указанное количество строк данных.
+
+В противном случае предполагается, что пользователь вводит строку данных в формате "id last_name first_name middle_name age", и эта строка записывается в файл вызовом функции write_data_to_file(command).
+
+Затем переменная count увеличивается на 1, чтобы отслеживать количество записанных данных.
+Таким образом, этот код предлагает пользователю вводить данные путем ввода соответствующих команд и записывает эти данные в файл "userdata.txt". Он также позволяет пользователю просматривать данные из файла с помощью команды "showdata" и ограничивать количество отображаемых строк данных.
+
+_______________________
+
+# -*- coding: utf-8 -*-
+
+def get_last_id():
+    with open("userdata.txt", "r") as file:
+        lines = file.readlines()
+        if len(lines) > 1:
+            last_line = lines[-1].strip()
+            last_id = int(last_line.split()[0])
+        else:
+            last_id = 0
+    return last_id
+
+def write_data_to_file(data):
+    last_id = get_last_id()
+    new_id = last_id + 1
+    new_data = f"{new_id} {data}"
+    
+    with open("userdata.txt", "a") as file:
+        if last_id == 0:  # Check if it is the first data entry
+            header_line = "id\tlast_name\tfirst_name\tmiddle_name\tage"
+            file.write(header_line + '\n')
+        file.write(new_data + '\n')
+    
+    print("Data has been written to the file.")
+
+def show_data(limit=None):
+    with open("userdata.txt", "r") as file:
+        lines = file.readlines()
+        header = lines[0]
+        data = lines[1:]
+        
+        if limit is not None and limit < len(data):
+            data = data[:limit]
+        
+        table = header.strip() + '\n'
+        for line in data:
+            table += line.strip() + '\n'
+        
+        print(table)
+
+try:
+    n = int(input("Enter the number of iterations: "))
+    count = 0
+    
+    header_line = "id\tlast_name\tfirst_name\tmiddle_name\tage"
+    with open("userdata.txt", "w") as file:
+        file.write(header_line + '\n')
+
+    while count < n:
+        strint = input("showdata* or write line with data: ")
+    
+        if strint == "showdata*":
+            show_data()
+        elif strint.startswith("showdata "):
+            try:
+                limit = int(strint.split()[1])
+                show_data(limit)
+            except ValueError:
+                print("Incorrect input. Please enter the 'showdata' command with an integer.")
+        else:
+            command = input("Enter the user data in the format id last_name first_name middle_name age: ")
+            write_data_to_file(command)
+            count += 1
+    pass
+except ValueError:
+    print("Invalid value!")
+    pass
+
+_______________________
+
+
+def show_data(limit=None):
+    try:
+        with open("data.txt", "r") as file:
+            data = file.readlines()
+        
+        print("id\tlast_name\tfirst_name\tmiddle_name\tage")
+        
+        if limit:
+            data = data[:limit]
+        
+        for line in data:
+            line = line.strip().split()
+            print("\t".join(line))
+            
+    except FileNotFoundError:
+        print("Data file not found.")
+        
+    except Exception as e:
+        print("An error occurred while reading the data:", str(e))
+            
+
+def write_data_to_file(line):
+    try:
+        with open("data.txt", "a") as file:
+            file.write(line + "\n")
+            
+    except Exception as e:
+        print("An error occurred while writing the data:", str(e))
+
+
+try:
+    n = int(input("Enter the number of iterations: "))
+    count = 0
+
+    while count < n:
+        strint = input("showdata* or write line with data: ")
+    
+        if strint == "showdata*":
+            show_data()
+        elif strint.startswith("showdata "):
+            try:
+                limit = int(strint.split()[1])
+                show_data(limit)
+            except ValueError:
+                print("Incorrect input. Please enter the 'showdata' command with an integer.")
+        else:
+            command = input("Enter the user data in the format id last_name first_name middle_name age: ")
+            write_data_to_file(command)
+            count += 1
+    
+except ValueError:
+    print("Invalid value!")
+    
+except Exception as e:
+    print("An error occurred:", str(e))
+
+Этот код представляет собой простую программу, которая взаимодействует с пользователем и выполняет операции с файлом данных "data.txt".
+
+Основные функции:
+
+1. `show_data(limit=None)` - открывает файл "data.txt" и выводит содержимое на экран в определенном формате. Если указан аргумент `limit`, то выводится только определенное количество строк (ограничение). Если файл не существует, выводится сообщение "Data file not found." Если происходит другая ошибка при чтении файла, выводится сообщение об ошибке.
+
+2. `write_data_to_file(line)` - добавляет переданную строку в файл "data.txt". Если происходит ошибка при записи в файл, выводится сообщение об ошибке.
+
+Основная логика программы:
+
+1. Вначале программа пытается получить целочисленное значение от пользователя в переменную `n`, чтобы узнать, сколько раз нужно выполнить дальнейшие действия.
+2. Затем программа запрашивает у пользователя ввод команды, либо для вывода данных (`"showdata*"`), либо для записи строки данных.
+3. Если введена команда `"showdata*"`, вызывается функция `show_data()` без аргументов, и данные из файла выводятся на экран.
+4. Если введена команда `"showdata <limit>"`, где `<limit>` - целое число, вызывается функция `show_data(limit)`, и только определенное количество строк из файла выводится на экран.
+5. Если введена любая другая строка, программа предполагает, что введены данные пользователя и вызывает функцию `write_data_to_file(line)`, чтобы добавить эту строку в файл "data.txt".
+6. Цикл продолжается, пока счетчик `count` не достигнет значения `n`.
+7. Если происходит ошибка при вводе целочисленного значения `n`, выводится сообщение "Invalid value!".
+8. Если происходит другая ошибка, выводится сообщение об ошибке.
+
+
+-----
+def show_data(limit=None):
+    try:
+        with open("data.txt", "r") as file:
+            data = file.readlines()
+        
+        print("id\tlast_name\tfirst_name\tmiddle_name\tage")
+        
+        if limit:
+            data = data[:limit]
+        
+        for line in data:
+            line = line.strip().split()
+            print("\t".join(line))
+            
+    except FileNotFoundError:
+        print("Data file not found.")
+        
+    except Exception as e:
+        print("An error occurred while reading the data:", str(e))
+            
+
+def write_data_to_file(line):
+    try:
+        with open("data.txt", "a") as file:
+            file.write(line + "\n")
+            
+    except Exception as e:
+        print("An error occurred while writing the data:", str(e))
+
+
+try:
+    n = int(input("Enter the number of iterations: "))
+    count = 0
+
+    while count < n:
+        strint = input("showdata* or write line with data: ")
+    
+        if strint == "showdata*":
+            show_data()
+        elif strint.startswith("showdata "):
+            try:
+                limit = int(strint.split()[1])
+                show_data(limit)
+            except ValueError:
+                print("Incorrect input. Please enter the 'showdata' command with an integer.")
+        else:
+            command = input("Enter the user data in the format id last_name first_name middle_name age: ")
+            write_data_to_file(command)
+            count += 1
+    
+except ValueError:
+    print("Invalid value!")
+    
+except Exception as e:
+    print("An error occurred:", str(e))
+------
+
+_______________________________________________________________________________________________
+
+-------------------------------
+
+
+Переменные и типы данных:
+Переменные используются для хранения значений, которые могут изменяться.
+В Python есть различные типы данных, такие как числа (целые, вещественные), строки (текст), списки (набор элементов), кортежи (неизменяемые наборы элементов) и другие.
+Для создания переменной используется оператор присваивания (=).
+
+Конечно! Вот подробные примеры для пункта "Переменные и типы данных" на языке Python:
+
+1) Создание переменной и присваивание значения:
+```python
+# Создание переменной "age" и присваивание значения 25
+age = 25
+
+# Создание переменной "name" и присваивание значения "John"
+name = "John"
+
+# Создание переменной "pi" и присваивание значения 3.14
+pi = 3.14
+```
+
+2) Различные типы данных в Python:
+- Целые числа (int):
+```python
+age = 25
+year = 2023
+```
+
+- Вещественные числа (float):
+```python
+pi = 3.14
+temperature = 98.6
+```
+
+- Строки (str):
+```python
+name = "John"
+message = 'Привет, мир!'
+```
+
+- Списки (list):
+```python
+fruits = ["яблоко", "банан", "апельсин"]
+numbers = [1, 2, 3, 4, 5]
+```
+
+- Кортежи (tuple):
+```python
+coordinates = (10, 20)
+colors = ("красный", "зеленый", "синий")
+```
+
+3) Изменение значения переменной:
+```python
+age = 25  # Присваивание значения 25 переменной "age"
+age = 30  # Изменение значения переменной "age" на 30
+```
+
+4) Возможность использования переменных в выражениях:
+```python
+x = 5
+y = 3
+
+result = x + y  # Сложение переменных
+print(result)  # Выводит: 8
+
+message = "Привет, " + name  # Конкатенация строки и переменной
+print(message)  # Выводит: Привет, John
+```
+
+Да, в Python есть возможность конвертировать, или преобразовывать, переменные из одного типа данных в другой. Это называется приведением типов (type casting). 
+
+Вот примеры конвертации переменных в Python:
+
+1) Преобразование в целое число (int):
+```python
+x = 5.6
+y = int(x)  # Конвертация числа с плавающей запятой в целое число
+print(y)  # Выводит: 5
+```
+
+2) Преобразование в число с плавающей запятой (float):
+```python
+x = 10
+y = float(x)  # Конвертация целого числа в число с плавающей запятой
+print(y)  # Выводит: 10.0
+```
+
+3) Преобразование в строку (str):
+```python
+x = 42
+y = str(x)  # Конвертация целого числа в строку
+print(y)  # Выводит: "42"
+```
+
+4) Преобразование в список (list):
+```python
+x = (1, 2, 3)
+y = list(x)  # Конвертация кортежа в список
+print(y)  # Выводит: [1, 2, 3]
+```
+
+5) Преобразование в кортеж (tuple):
+```python
+x = [4, 5, 6]
+y = tuple(x)  # Конвертация списка в кортеж
+print(y)  # Выводит: (4, 5, 6)
+```
+
+Важно помнить, что конвертация переменных может менять их значения или структуру данных. При преобразовании следует учесть возможные потери точности или ошибки, особенно при работе с числами с плавающей запятой.
+
+
+-------------------------------
+
+
+Условные операторы:
+Условные операторы позволяют выполнять определенные действия в зависимости от условий.
+В Python используется оператор if для проверки условий и выполнения определенного блока кода.
+Вот подробные примеры использования условных операторов в Python:
+
+Пример 1: Оператор if
+
+python
+Copy code
+x = 10
+
+if x > 5:
+    print("x больше 5")  # Если условие истинно, этот блок кода выполнится
+В этом примере мы используем оператор if для проверки условия x > 5. Если это условие истинно (что в данном случае верно, потому что 10 больше 5), то блок кода внутри оператора if будет выполнен, и на экран будет выведена фраза "x больше 5".
+
+Пример 2: Оператор if-else
+
+python
+Copy code
+x = 3
+
+if x > 5:
+    print("x больше 5")  # Если условие истинно, этот блок кода выполнится
+else:
+    print("x меньше или равен 5")  # Если условие ложно, этот блок кода выполнится
+В этом примере условие x > 5 не выполняется (потому что 3 меньше 5), поэтому блок кода после оператора else будет выполнен, и на экран будет выведена фраза "x меньше или равен 5".
+
+Пример 3: Оператор if-elif-else
+
+python
+Copy code
+x = 7
+
+if x > 10:
+    print("x больше 10")  # Если условие истинно, этот блок кода выполнится
+elif x > 5:
+    print("x больше 5, но меньше или равен 10")  # Если предыдущее условие ложно, а это условие истинно, этот блок кода выполнится
+else:
+    print("x меньше или равен 5")  # Если все предыдущие условия ложны, этот блок кода выполнится
+В этом примере условие x > 10 не выполняется, поэтому проверяется следующее условие x > 5, которое истинно (потому что 7 больше 5). Таким образом, блок кода после оператора elif будет выполнен, и на экран будет выведена фраза "x больше 5, но меньше или равен 10".
+
+В остальных случаях, когда и первое условие x > 10, и второе условие x > 5 не выполняются, будет выполнен блок кода после оператора else, и на экран будет выведена фраза "x меньше или равен 5".
+-------------------------------
+Циклы:
+Циклы позволяют выполнять определенный блок кода несколько раз.
+В Python есть два основных типа циклов: цикл while и цикл for.
+Вот подробные примеры использования циклов в Python:
+
+Пример 1: Цикл while
+
+python
+Copy code
+i = 1
+
+while i <= 5:
+    print(i)  # Выводим текущее значение переменной i
+    i += 1  # Увеличиваем значение i на 1
+В этом примере используется цикл while для выполнения блока кода до тех пор, пока условие i <= 5 истинно. Начальное значение i равно 1. На каждой итерации цикла значение i выводится на экран, а затем увеличивается на 1. Цикл продолжается, пока значение i не превысит 5. В результате на экран будет выведена последовательность чисел от 1 до 5.
+
+Пример 2: Цикл for
+
+python
+Copy code
+fruits = ["яблоко", "банан", "груша"]
+
+for fruit in fruits:
+    print(fruit)  # Выводим текущий элемент списка fruits
+В этом примере используется цикл for для выполнения блока кода для каждого элемента списка fruits. На каждой итерации цикла текущий элемент списка присваивается переменной fruit, и затем этот элемент выводится на экран. Цикл будет продолжаться, пока не пройдет все элементы списка fruits. В результате на экран будет выведен каждый элемент списка fruits в отдельной строке.
+
+Пример 3: Использование функции range() с циклом for
+
+python
+Copy code
+for i in range(1, 6):
+    print(i)  # Выводим текущее значение переменной i
+В этом примере используется функция range() вместе с циклом for. Функция range(1, 6) создает последовательность чисел от 1 до 5 (включая 1, но не включая 6). На каждой итерации цикла текущее значение переменной i выводится на экран. Цикл будет выполнен для каждого значения в последовательности, то есть от 1 до 5. В результате на экран будет выведена последовательность чисел от 1 до 5.
+
+
+
+Вот примеры вложенных циклов в Python:
+
+Пример 1: Вложенные циклы while
+
+python
+Copy code
+i = 1
+
+while i <= 3:
+    j = 1
+    while j <= 3:
+        print(f"({i}, {j})")  # Выводим текущие значения переменных i и j
+        j += 1
+    i += 1
+В этом примере используются два вложенных цикла while. Внешний цикл выполняется три раза (когда i равно 1, 2 и 3), а внутренний цикл выполняется три раза (когда j равно 1, 2 и 3). На каждой итерации внутреннего цикла выводятся текущие значения переменных i и j. В результате на экран будут выведены все комбинации значений (i, j) от (1, 1) до (3, 3).
+
+Пример 2: Вложенные циклы for
+
+python
+Copy code
+rows = 3
+columns = 2
+
+for i in range(1, rows + 1):
+    for j in range(1, columns + 1):
+        print(f"({i}, {j})")  # Выводим текущие значения переменных i и j
+В этом примере используются два вложенных цикла for. Внешний цикл выполняется три раза (когда i равно 1, 2 и 3), а внутренний цикл выполняется два раза (когда j равно 1 и 2). На каждой итерации внутреннего цикла выводятся текущие значения переменных i и j. В результате на экран будут выведены все комбинации значений (i, j) от (1, 1) до (3, 2).
+
+Пример 3: Вложенные циклы с использованием списков
+
+python
+Copy code
+outer_list = [1, 2, 3]
+inner_list = ["a", "b", "c"]
+
+for outer_item in outer_list:
+    for inner_item in inner_list:
+        print(f"({outer_item}, {inner_item})")  # Выводим текущие значения outer_item и inner_item
+В этом примере используются два вложенных цикла for. Внешний цикл выполняется для каждого элемента в списке outer_list, а внутренний цикл выполняется для каждого элемента в списке inner_list. На каждой итерации внутреннего цикла выводятся текущие значения переменных outer_item и inner_item. В результате на экран будут выведены все комбинации значений (outer_item, inner_item).
+-------------------------------
+Функции:
+Функции в Python позволяют разделить код на более мелкие и повторно используемые блоки.
+Они позволяют передавать аргументы (входные данные) и возвращать значения (выходные данные).
+
+ Вот примеры функций в Python:
+
+Пример 1: Функция без аргументов и без возвращаемого значения
+
+python
+Copy code
+def greet():
+    print("Привет, мир!")
+    
+# Вызываем функцию greet()
+greet()
+В этом примере у нас есть функция greet(), которая не принимает аргументов и не возвращает никаких значений. Она просто выводит на экран строку "Привет, мир!". При вызове функции greet(), она выполнится и выведет соответствующий текст.
+
+Пример 2: Функция с аргументами
+
+python
+Copy code
+def greet(name):
+    print(f"Привет, {name}!")
+
+# Вызываем функцию greet() с аргументом "Алиса"
+greet("Алиса")
+# Вызываем функцию greet() с аргументом "Боб"
+greet("Боб")
+В этом примере функция greet(name) принимает один аргумент name. Она выводит приветствие, используя переданное имя. При вызове функции greet("Алиса"), она выведет "Привет, Алиса!", а при вызове greet("Боб"), она выведет "Привет, Боб!".
+
+Пример 3: Функция с возвращаемым значением
+
+python
+Copy code
+def add_numbers(x, y):
+    return x + y
+
+# Вызываем функцию add_numbers() с аргументами 5 и 3
+result = add_numbers(5, 3)
+print(result)  # Выводим результат сложения, который вернула функция
+В этом примере у нас есть функция add_numbers(x, y), которая принимает два аргумента x и y. Она выполняет сложение этих аргументов с помощью оператора + и возвращает результат с помощью ключевого слова return. При вызове функции add_numbers(5, 3), она вернет результат 8, который мы сохраняем в переменной result и выводим на экран.
+
+-------------------------------
+Работа с файлами:
+Для работы с файлами в Python используются функции open(), close(), read(), write() и другие.
+Открытие файла происходит с указанием пути к файлу и режима доступа (чтение, запись и т.д.).
+После завершения работы с файлом его следует закрыть с помощью функции close().
+
+
+Пример 1: Открытие файла и чтение его содержимого
+
+python
+Copy code
+# Открываем файл для чтения
+file = open("example.txt", "r")
+
+# Читаем содержимое файла
+content = file.read()
+print(content)
+
+# Закрываем файл
+file.close()
+В этом примере мы открываем файл с именем "example.txt" в режиме чтения ("r"). Затем мы читаем все содержимое файла с помощью функции read() и сохраняем его в переменную content. Далее мы выводим содержимое файла на экран. Наконец, мы закрываем файл с помощью функции close().
+
+Пример 2: Запись в файл
+
+python
+Copy code
+# Открываем файл для записи
+file = open("example.txt", "w")
+
+# Записываем строку в файл
+file.write("Это строка, которую мы записываем в файл.")
+
+# Закрываем файл
+file.close()
+В этом примере мы открываем файл с именем "example.txt" в режиме записи ("w"). Затем мы используем функцию write() для записи строки в файл. Мы передаем строку "Это строка, которую мы записываем в файл." в качестве аргумента. После записи мы закрываем файл с помощью функции close().
+
+Пример 3: Использование блока with для автоматического закрытия файла
+
+python
+Copy code
+# Открываем файл с помощью блока with
+with open("example.txt", "r") as file:
+    content = file.read()
+    print(content)
+    
+# Файл автоматически закрывается после выхода из блока with
+В этом примере мы используем блок with для открытия файла. Внутри блока мы выполняем чтение содержимого файла и выводим его на экран. После выхода из блока with, файл автоматически закрывается, и нам не нужно явно вызывать функцию close().
+
+-------------------------------
+
+
+Пример: Запись и чтение двоичных данных из файла
+
+python
+Copy code
+# Запись двоичных данных в файл
+data = b'\x48\x65\x6c\x6c\x6f\x20\x57\x6f\x72\x6c\x64'  # Байтовая строка
+with open("binary.bin", "wb") as file:
+    file.write(data)
+
+# Чтение и вывод двоичных данных из файла
+with open("binary.bin", "rb") as file:
+    binary_data = file.read()
+    print(binary_data)
+    print(list(binary_data))
+В этом примере мы создаем байтовую строку data, содержащую ASCII значения символов 'Hello World'. Затем мы открываем файл "binary.bin" в режиме записи двоичных данных ("wb"). Используя функцию write(), мы записываем байтовую строку data в файл.
+
+Далее мы открываем тот же файл для чтения двоичных данных ("rb") и считываем его содержимое с помощью функции read(). Мы выводим считанные двоичные данные на экран и также создаем список, содержащий значения каждого байта в данных.
+
+
+-------------------------------
+
+Блок try except 
+Давайте подробнее разберем обработку исключений и приведем несколько примеров.
+
+Обработка исключений в программировании позволяет элегантно обрабатывать ошибки или исключительные ситуации, которые могут возникнуть во время выполнения программы. Это позволяет предотвратить аварийное завершение программы и предоставить дополнительную информацию о возникшей проблеме.
+
+Пример обработки исключений в Python:
+
+python
+Copy code
+try:
+    # Код, который может вызвать исключение
+    x = 10 / 0  # Вызываем деление на ноль
+except ZeroDivisionError:
+    # Обработка исключения деления на ноль
+    print("Ошибка: деление на ноль!")
+В данном примере, мы использовали конструкцию try-except для обработки исключения ZeroDivisionError, которое возникает при попытке деления на ноль. Если в блоке try возникает исключение, выполнение программы переходит в соответствующий блок except, где выполняется обработка исключения. В данном случае мы просто выводим сообщение об ошибке.
+
+Часто используемые исключения в Python включают:
+
+ZeroDivisionError: возникает при делении на ноль.
+FileNotFoundError: возникает, если файл не найден.
+TypeError: возникает при неправильном использовании типов данных.
+ValueError: возникает, когда функция получает аргумент правильного типа, но с недопустимым значением.
+Некоторые примеры обработки исключений:
+
+python
+Copy code
+# Пример обработки исключения FileNotFoundError
+try:
+    with open("file.txt", "r") as file:
+        content = file.read()
+except FileNotFoundError:
+    print("Файл не найден!")
+
+# Пример обработки исключения TypeError
+try:
+    numbers = [1, 2, 3]
+    sum = numbers + "4"
+except TypeError:
+    print("Неверный тип данных!")
+
+# Пример обработки исключения ValueError
+try:
+    number = int("abc")
+except ValueError:
+    print("Недопустимое значение!")
+В каждом из этих примеров мы используем конструкцию try-except для обработки соответствующего исключения. Если исключение происходит в блоке try, программа переходит в блок except, где осуществляется обработка исключения путем вывода соответствующего сообщения.
+
+
+
+в обработке исключений в Python может использоваться блок finally. Блок finally является необязательным и позволяет выполнить определенные действия независимо от того, произошло исключение или нет. Блок finally выполняется всегда после выполнения блока try и, при наличии, после выполнения любого блока except.
+
+Пример использования блока finally:
+
+python
+Copy code
+try:
+    # Код, который может вызвать исключение
+    x = 10 / 0  # Вызываем деление на ноль
+except ZeroDivisionError:
+    # Обработка исключения деления на ноль
+    print("Ошибка: деление на ноль!")
+finally:
+    # Блок finally
+    print("Выполнение блока finally")
+
+# Вывод:
+# Ошибка: деление на ноль!
+# Выполнение блока finally
+В этом примере, если происходит исключение ZeroDivisionError, программа попадает в блок except и выводит сообщение об ошибке. Затем программа выполняет блок finally, где выводится сообщение "Выполнение блока finally". Важно отметить, что блок finally будет выполняться независимо от того, было или не было исключение.
+
+Блок finally часто используется для освобождения ресурсов, таких как закрытие файлов или соединений с базой данных, независимо от того, произошло ли исключение или нет.
+
+
+try:
+    # Код, который может вызвать исключение
+    result = 10 / 0
+except ZeroDivisionError:
+    # Обработка исключения типа ZeroDivisionError
+    print("Деление на ноль!")
+except Exception as e:
+    # Обработка остальных исключений
+    print("Произошло исключение:", str(e))
+finally:
+    # Код, который будет выполнен в любом случае
+    print("Конец обработки исключений")
+_____________________________________________________________________________
+
+Пример 4: Механизм обмена данными между клиентом и сервером с помощью сокетов (асинхронная реализация)
+
+Серверный код:
+
+python
+Copy code
+import asyncio
+
+async def handle_client(reader, writer):
+    data = await reader.read(100)
+    message = data.decode()
+    addr = writer.get_extra_info('peername')
+
+    print(f"Сервер получил от клиента {addr} сообщение: {message}")
+
+    response = "Привет, клиент!"
+    writer.write(response.encode())
+    await writer.drain()
+
+    print(f"Сервер отправил клиенту {addr} ответ: {response}")
+
+    writer.close()
+
+async def main():
+    server = await asyncio.start_server(
+        handle_client, '127.0.0.1', 8888)
+
+    addr = server.sockets[0].getsockname()
+    print(f"Сервер запущен на {addr}")
+
+    async with server:
+        await server.serve_forever()
+
+asyncio.run(main())
+Клиентский код:
+
+python
+Copy code
+import asyncio
+
+async def main():
+    reader, writer = await asyncio.open_connection(
+        '127.0.0.1', 8888)
+
+    message = "Привет, сервер!"
+    writer.write(message.encode())
+    await writer.drain()
+
+    print(f"Клиент отправил серверу сообщение: {message}")
+
+    data = await reader.read(100)
+    response = data.decode()
+
+    print(f"Клиент получил от сервера ответ: {response}")
+
+    writer.close()
+    await writer.wait_closed()
+
+asyncio.run(main())
+В этом примере сервер и клиент используют модуль asyncio для асинхронной обработки событий.
+
+В серверном коде, функция handle_client вызывается для каждого подключения клиента. Она читает данные от клиента с помощью reader.read(), преобразует их в строку (data.decode()) и выводит на экран. Затем сервер отправляет ответное сообщение клиенту с помощью writer.write(), вызывает writer.drain() для убеждения, что данные отправлены, и закрывает соединение вызовом writer.close().
+
+В клиентском коде, asyncio.open_connection() используется для установления соединения с сервером. Клиент отправляет сообщение на сервер с помощью writer.write(), вызывает writer.drain() для убеждения, что данные отправлены. Затем клиентожидает ответа от сервера с помощью reader.read(), преобразует его в строку и выводит на экран.
+
+Пример 5: Запуск отдельных процессов и потоков
+
+Для запуска отдельных процессов и потоков в Python можно использовать модули multiprocessing и threading соответственно.
+
+Пример с использованием multiprocessing:
+
+python
+Copy code
+import multiprocessing
+
+def worker():
+    print("Запущен дочерний процесс")
+    # Добавьте свой код дочернего процесса здесь
+
+if __name__ == '__main__':
+    print("Запущен основной процесс")
+
+    process = multiprocessing.Process(target=worker)
+    process.start()
+
+    process.join()
+
+    print("Основной процесс завершен")
+В этом примере, в основном процессе мы создаем экземпляр класса multiprocessing.Process, указываем целевую функцию worker, и запускаем новый дочерний процесс с помощью process.start(). Затем мы ждем, пока дочерний процесс завершится, вызывая process.join().
+
+Пример с использованием threading:
+
+python
+Copy code
+import threading
+
+def worker():
+    print("Запущен поток")
+    # Добавьте свой код потока здесь
+
+if __name__ == '__main__':
+    print("Запущен основной поток")
+
+    thread = threading.Thread(target=worker)
+    thread.start()
+
+    thread.join()
+
+    print("Основной поток завершен")
+В этом примере мы создаем экземпляр класса threading.Thread, указываем целевую функцию worker, и запускаем новый поток с помощью thread.start(). Затем мы ждем, пока поток завершится, вызывая thread.join().
+
+Обратите внимание, что код дочернего процесса или потока должен быть в функции worker. Это то место, где вы можете написать свой код выполнения для каждого отдельного процесса или потока.
+
+
+
+
+
+
+
+
+
+
+Работы на парах:
+ПР-1 
+
+№1
+rost=float(input("Введите ваш рост в см.: "))
+ves=float(input("Введите ваш текущий вес: "))
+optimalves=rost-100
+if ves==optimalves:
+    print("Ваш вес уже оптимальный")
+elif ves<optimalves:
+    print("Рекомендуется набрать вес")
+else:
+  print("Рекомендуется снизить вес")
+ ___________________________________________________________________________________________
+
+№2
+
+a=float(input("Введите сторону треугольника а: "))
+b=float(input("Введите сторону треугольника b: "))
+c=float(input("Введите сторону треугольника c: "))
+if a==b==c:
+    print("Это равносторонний треугольник")
+elif a==b or a==c or b==c:
+   print("Это равнобедренный треугольник")
+else:
+    print("Это разносторонний треугольник")
+
+ ___________________________________________________________________________________________
+
+№3
+a1 = float(input("num1: "))
+b1 = float(input("num2: "))
+c1 = float(input("num3: "))
+if a1 % 2 == 0:
+        a1 = a1 / 2
+else:
+        if a1 == 1:
+            a1 = 2
+if b1 % 2 == 0:
+        b1 = b1 / 2
+else:
+        if b1 == 1:
+            b1 = 2
+if c1 % 2 == 0:
+        c1 = c1 / 2
+else:
+        if c1 == 1:
+            c1 = 2
+print("Numbers: ")
+print(a1)
+print(b1)
+print(c1)
+ ___________________________________________________________________________________________
+
+№4
+god = int(input("Enter yaer: "))
+if (god%4==0 and god%100!= 0 or god%400==0):
+    print("god yessss")
+else:
+    print("god noooo")
+___________________________________________________________________________________________
+
+№5
+chislo = int(input("Введите число:"))
+if chislo%2==0:
+    print("число четное")
+else:
+    print("Число не четное")
+
+___________________________________________________________________________________________
+
+№6-1
+a=float(input("a: "))
+b=float(input("b: "))
+c=float(input("c: "))
+if a==0:
+print("a not = 0.")
+else:
+    D = b*b - 4*a*c
+if D>0:
+print("D = 2 korna")
+            x1 = ((-b-D**0.5)/(2*a))
+            x2 = ((-b+D**0.5)/(2*a))
+print("D=0: ",D)
+print("x1: ",x1)
+print("x2: ",x2)  
+elif D==0:
+            x = -(b/(2*a))
+print("D = 1 koren: ",x)
+else: 
+print("Not korney") 
+
+___________________________________________________________________________________________
+
+№7-2
+x = float(input("x: "))
+y = float(input("y: "))
+
+# Проверяем, принадлежит ли точка кругу(радиус 1 см)
+if ((x - 0)+ (y - 0))**2 <= 1 ** 2:
+print("The point belongs to the circle")
+else:
+# Проверяем, принадлежит ли точка квадрату
+if -1 <= x <= 0 and -1 <= y <= 1:
+print("The point belongs to the square")
+else:
+print("The point does not belong to either a circle or a square")
+___________________________________________________________________________________________
+
+№8-3
+# Ввод трехзначного числа
+number = int(input("Enter a three-digit number: "))
+# Разделение числа на цифры (345 – 3 4 5 )
+num1 = number // 100                  3
+num2 = (number % 100) // 10           4
+num3 = number % 10                    5
+# Вычисление суммы цифр
+sum_of_nums = num1 + num2 + num3
+# Проверка деления на 3 и вывод результата
+if sum_of_nums % 3 == 0:
+print("YES " +"The sum of the digits of the number", number, "divided by 3")
+else:
+print("NOO " +"The sum of the digits of the number", number, "not divisible by 3")
+___________________________________________________________________________________________
+
+
+
+ПР-2
+
+№1
+n = int(input("Введите день пробежки:"))
+summa = 0
+zavtra = 10
+for i in range(n):
+    summa += zavtra
+    zavtra += zavtra/10
+print(summa)
+___________________________________________________________________________________________
+
+№2
+n = int(input("Chislo: "))
+b = input()
+
+if n<=256:
+    while n > 0:
+        b = input(n % 2) + b
+        n = n // 2
+    input(b)
+print("The end")
+___________________________________________________________________________________________
+
+№3
+num = int(input("Введите натуральное число: "))
+print()
+print("Числа:")
+for i in range(2, num+1):
+    while num % i == 0:
+        print(i)
+        num = num // i
+        if num == 1:
+            break
+___________________________________________________________________________________________
+
+№4
+population = 620000
+growth_rate = 0.037
+target_population = 1500000
+
+year = 2021
+while population < target_population:
+    population += population * growth_rate
+    year += 1
+
+print("Население превысит 1.5 млн человек в", year, "году")
+___________________________________________________________________________________________
+
+№5
+num = int(input("Введите натуральное число: "))
+    
+sum_of_odd_divisors = 0
+for i in range(1, num+1):
+    if num % i == 0 and i % 2 != 0:
+        sum_of_odd_divisors += i
+    
+print("Сумма нечетных делителей числа", num, "равна", sum_of_odd_divisors)
+___________________________________________________________________________________________
+
+№6
+n = int(input("Введите количество делителей: "))
+
+for num in range(1, 201):
+    count = 0
+    for i in range(1, num+1):
+        if num % i == 0:
+            count += 1
+    if count == n:
+        print(num)
+___________________________________________________________________________________________
+
+№7
+P.S. Если выполняются оба условия, то никаких цифр нету, если по одному, то:
+print("Если условие задачи подразумевает одновременное выполнение 2-ух условий, то никаких цифр нету, а если отдельные условия, то: ")
+print("Заканчиваются на 8")
+for x in range(10, 100):  
+    if x * 2 % 10 == 8: 
+        print(x)  
+print()    
+print("Заканчиваются на 4")
+for x in range(10, 100): 
+    if x * 3 % 10 == 4:  
+        print(x)  
+___________________________________________________________________________________________
+
+№8
+A = float(input("Введите вещественное число A: "))
+N = int(input("Введите целое число N: "))
+
+for i in range(1, N+1):
+    result = A ** i
+    print(result)
+
+___________________________________________________________________________________________
+
+№9
+x = float(input("Введите значение аргумента x: "))
+e = float(input("Введите погрешность e: "))
+
+# Вычисление левой части (гиперболический косинус)
+left = (2.718281828459045**x + 2.718281828459045**(-x)) / 2
+
+# Вычисление правой части (разложение в ряд Тейлора)
+right = 1
+term = 1
+n = 1
+
+while abs(term) > e:
+    term *= x**2 / (2*n * (2*n - 1))
+    right += term
+    n += 1
+
+print("Левая часть:", left)
+print("Правая часть:", right)
+print("Число итераций:", n)
+___________________________________________________________________________________________
+
+№10
+n = int(input("Введите количество пар лап: "))
+
+for geese in range(n + 1):
+    rabbits = n - geese
+    print(f"Гусей: {geese}, Кроликов: {rabbits}")
+___________________________________________________________________________________________
+
+
+ПР-3
+№1
+import random
+# Задаем размер списка
+n = 10
+# Генерируем случайный список
+numbers = [random.randint(1, 10) for _ in range(n)]
+# Заменяем значения элементов на их квадраты
+squared_numbers = [num ** 2 for num in numbers]
+print(numbers)
+print(squared_numbers)
+___________________________________________________________________________________________
+
+№2
+numbers = [1, 2, 3, 4, 5, 2, 3, 4, 6, 7, 8, 4, 5, 9, 10, 2, 5, 7, 6, 6, 10]
+
+# Создаем пустой список для хранения значений, которые встречаются более одного раза
+duplicates = []
+
+# Перебираем каждый элемент списка
+for num in numbers:
+    # Если элемент встречается более одного раза и его значение еще не добавлено в список duplicates
+    if numbers.count(num) > 1 and num not in duplicates:
+        duplicates.append(num)
+
+# Выводим значения, которые встречаются более одного раза
+print(duplicates)
+___________________________________________________________________________________________
+
+№3
+list1 = [1, 2, 3, 4, 5]
+list2 = [4, 5, 6, 7, 8]
+
+# Создаем пустой список для хранения элементов второго списка, которые не входят в первый список
+list3 = []
+
+# Перебираем каждый элемент второго списка
+for num in list2:
+    # Если элемент не входит в первый список
+    if num not in list1:
+        list3.append(num)
+
+# Выводим третий список
+print(list3)
+___________________________________________________________________________________________
+
+№4
+numbers = [10, 15, 20, 25, 30, 20]
+
+for i in range(len(numbers)):
+    if numbers[i] == 20:
+        numbers[i] = 200
+
+print(numbers)
+___________________________________________________________________________________________
+
+№5
+numbers = [2, 4, 6, 8, 10, 12, 15, 16, 18, 20]
+
+for num in numbers:
+    if num == 15:
+        break
+    if num % 2 == 0:
+        print(num)
+___________________________________________________________________________________________
+
+№6
+n = int(input("Введите число n: "))
+
+numbers = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105]
+
+new_numbers = []
+
+for num in numbers:
+    if num <= n:
+        new_numbers.append(num)
+
+print(new_numbers)
+___________________________________________________________________________________________
+
+№7
+numbers = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 10, 102, 23]
+
+min_index = numbers.index(min(numbers))
+max_index = numbers.index(max(numbers))
+
+print("Наименьший элемент:", min(numbers))
+print("Индекс наименьшего элемента:", min_index)
+print("Наибольший элемент:", max(numbers))
+print("Индекс наибольшего элемента:", max_index)
+
+___________________________________________________________________________________________
+
+№8
+numbers = input("Введите последовательность чисел через пробел: ")
+numbers = numbers.split()
+numbers = [int(num) for num in numbers]
+
+sorted_asc = sorted(numbers)
+sorted_desc = sorted(numbers, reverse=True)
+
+if numbers == sorted_asc:
+    print("Список отсортирован по возрастанию")
+    print(True)
+elif numbers == sorted_desc:
+    print("Список отсортирован по убыванию")
+    print(True)
+else:
+    print("Список не отсортирован")
+    print(False)
+___________________________________________________________________________________________
+ПР4
+Разработать приложение, которое записывает в файл все строки, введенные
+пользователем. Признак конца ввода — пустая строка. Пример:
+
+Введите имя файла: file.хе
+Начните вводить строки
+
+>one
+>two
+>three
+>
+Файл записан.
+
+После выполнения программы должен появиться файл data.exe ‚ содержащий тристроки:
+
+one
+two
+three
+
+filename = input("File name: ")
+
+with open(filename, 'w', encoding='utf-8') as file:
+    print("Start typing lines")
+    while True:
+        line = input("> ")
+        if line == "":
+            break
+        file.write(line + "\n")
+
+print("The file is recorded.")
+___________________________________________________________________________________________________
+
+
+Разработать приложение для нумерации строк в файле. Приложение принимает на вход,
+имя файла и выводит его построчно, добавляя к каждой строке ее номер. Если
+использовать файл, созданный в предыдущей задаче, то результат работы программы
+будет выглядеть так:
+
+Введите имя файла: data.txt
+1 one
+
+2 two
+
+3 three
+
+Используйте метод строки rstrip() , чтобы избавиться от лишних переносов сток. После
+этого результат работы программы примет вид:
+
+Введите имя файла: data.txt
+1 one
+2 two
+3 three
+
+
+filename = input("File name: ")
+
+file = open(filename, "r")
+
+line_number = 1
+for line in file:
+    line = line.rstrip()
+    print(line_number, line)
+    line_number += 1
+
+file.close()
+
+
+___________________________________________________________________________________________
+
+
+Разработать приложение для разделения файла на части. Приложение принимает на
+вход имя файла для разделения и целое число М. На выходе у приложения множество
+файлов, каждый из которых содержит не более, чем М строк из исходного файла.
+
+Пусть на вход программе подается файл date.txt , со следующим текстом:
+
+one
+two
+three
+four
+five
+six
+seven
+eight
+nine
+ten
+
+Будем разделять его на несколько файлов, в каждом из которых окажется не более трех
+строк:
+
+Введите имя входного файла: date.txt
+Введите максимальное количество строк: 3
+
+После выполнения программы должны быть созданы файлы 1.txt, 2.txt и так далее. В
+файле 1.txt будут сроки:
+
+one
+two
+three
+
+В файле 2.txt:
+
+four
+five
+six
+
+И так далее.
+
+
+
+input_file = input("Enter the name of the input file: ")
+max_lines = int(input("Enter the maximum number of rows: "))
+
+file = open(input_file, "r")
+
+line_number = 1
+file_number = 1
+output_file = open(str(file_number) + ".txt", "w")
+
+for line in file:
+    output_file.write(line)
+    line_number += 1
+    
+    if line_number > max_lines:
+        output_file.close()
+        file_number += 1
+        line_number = 1
+        output_file = open(str(file_number) + ".txt", "w")
+
+file.close()
+output_file.close()
+
+
+___________________________________________________________________________
+
+
+
+
+Разработать приложение для объединения файлов. Приложение принимает на вход,
+имена файлов для объединения (можно использовать файлы, полученные из
+предыдущего задания) и имя выходного файла.
+
+file1 = input("Enter the name of the first file: ")
+file2 = input("Enter the name of the second file: ")
+output_file = input("Enter the name of the output file: ")
+
+file1 = open(file1, "r")
+file2 = open(file2, "r")
+output_file = open(output_file, "w")
+
+for line in file1:
+    output_file.write(line)
+
+output_file.write("\n")  # отступ между файлами
+
+for line in file2:
+    output_file.write(line)
+
+file1.close()
+file2.close()
+output_file.close()
+
+__________________________________________________________________________________________
+Дополнительные задачи
+
+1. Разработайте приложение, которое выводит м первых строк файла.
+filename = input("Enter the file name: ")
+m = int(input("Enter the number of lines to output: "))
+
+file = open(filename, "r")
+
+for i in range(m):
+    line = file.readline()
+    if not line:
+        break
+    print(line.rstrip())
+
+file.close()
+
+
+2. Разработайте приложение, которое выводит н последних строк файла.
+filename = input("Enter the file name: ")
+n = int(input("Enter the number of lines to output: "))
+
+file = open(filename, "r")
+
+lines = file.readlines()
+total_lines = len(lines)
+
+start_index = max(0, total_lines - n)
+
+for i in range(start_index, total_lines):
+    print(lines[i].rstrip())
+
+file.close()
+
+
+____________________________________
+
+КЛАССЫ
+# -*- coding: utf-8 -*-
+import os
+import pickle
+import tempfile
+
+
+while True:
+    N = input("Enter the task number (1-7) or enter 'q' to exit: ")
+    if N.lower() == 'q':
+        break
+    if N == '1':
+       class Soda:
+        def __init__(self, supplement=None):
+            self.supplement = supplement
+
+        def show_my_drink(self):
+            if self.supplement:
+                print(f"Soda and {self.supplement}")
+            else:
+                print("Regular soda")
+
+       print("Task #1")
+       my_soda = Soda(input("Enter the supplement: "))
+       my_soda.show_my_drink() 
+       my_soda2 = Soda()
+       my_soda2.show_my_drink()
+
+
+Этот код содержит определение класса `Soda` и его использование.
+
+Определение класса `Soda` начинается с использования ключевого слова `class`, после которого следует имя класса. Затем идет определение инициализационного метода `__init__`, который выполняется при создании нового объекта класса. У этого метода есть один параметр `self`, который ссылается на создаваемый объект. Параметр `supplement` имеет значение по умолчанию `None`. Внутри инициализационного метода, свойство `supplement` объекта класса `Soda` устанавливается равным значению аргумента `supplement`, переданного при создании объекта.
+
+Затем определен метод `show_my_drink`, который также имеет параметр `self`. Этот метод выводит информацию о напитке. Если у объекта `Soda` есть значение свойства `supplement`, то будет выведено сообщение вида "Soda and {self.supplement}". В противном случае будет выведено сообщение "Regular soda".
+
+Далее, в блоке кода после определения класса, идет выполнение основной логики программы внутри цикла `while True`. Пользовательу предлагается вводить номер задачи (1-7) или ввести 'q' для выхода из программы. Если пользователь вводит 'q', то цикл прерывается с помощью ключевого слова `break`. Если пользователь вводит '1', то создается новый объект `my_soda` класса `Soda`, и пользователю предлагается ввести дополнение для напитка. Затем вызывается метод `show_my_drink` для объекта `my_soda`, который выводит информацию о напитке. Затем создается еще один объект `my_soda2` класса `Soda` без дополнения, и вызывается метод `show_my_drink` для этого объекта.
+
+Таким образом, класс `Soda` имеет одно свойство `supplement` и два метода: `__init__` для инициализации объекта и `show_my_drink` для вывода информации о напитке. В основной программе создаются объекты класса `Soda` и вызываются их методы для демонстрации работы класса. 🥤
+
+
+
+
+
+Метод `__init__` в Python является инициализационным методом класса. Он вызывается автоматически при создании нового объекта класса. Цель `__init__` состоит в инициализации свойств объекта, задании начальных значений и выполнении других необходимых операций для подготовки объекта к использованию.
+
+Общий синтаксис метода `__init__` выглядит так:
+
+```python
+def __init__(self, параметры):
+    # код инициализации объекта
+```
+
+В методе `__init__` параметр `self` является ссылкой на создаваемый объект класса. Через этот параметр можно получить доступ к свойствам и методам объекта. Остальные параметры `параметры` могут быть использованы для передачи значений, которые будут устанавливаться в свойства объекта.
+
+Пример использования метода `__init__`:
+
+```python
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+person1 = Person("Alice", 25)
+person2 = Person("Bob", 30)
+```
+
+В данном примере класс `Person` имеет свойства `name` и `age`, которые инициализируются значениями, переданными при создании объектов `person1` и `person2`. Когда объект создается, метод `__init__` выполняется автоматически и устанавливает значения свойств для объекта.
+
+Таким образом, метод `__init__` позволяет задать начальные значения свойств объекта при его создании.
+
+_____________________________________________________________________________________________________________________________________________________________________________________
+
+    elif N == '2':
+        class TriangleChecker:
+            def __init__(self, a, b, c):
+                self.a = a
+                self.b = b
+                self.c = c
+
+            def is_triangle(self):
+                if isinstance(self.a, int) and isinstance(self.b, int) and isinstance(self.c, int):
+                    if self.a > 0 and self.b > 0 and self.c > 0:
+                        if self.a + self.b > self.c and self.a + self.c > self.b and self.b + self.c > self.a:
+                            return "Hooray, you can build a triangle!"
+                        else:
+                            return "It's a pity, but you can't make a triangle out of it."
+                    else:
+                        return "Nothing will work with negative numbers!"
+                else:
+                    return "You only need to enter numbers!"
+
+        a = int(input("a = "))
+        b = int(input("b = "))
+        c = int(input("c = "))
+
+        tc = TriangleChecker(a, b, c)
+        result = tc.is_triangle()
+        print(result)
+
+
+
+В данном коде определен класс `TriangleChecker`. Рассмотрим его составляющие:
+
+1. **Метод `__init__`:**
+
+   Метод `__init__` является конструктором класса. Он принимает три аргумента `a`, `b` и `c`, которые предполагается, что будут числами. Внутри метода эти значения присваиваются свойствам объекта класса `self.a`, `self.b` и `self.c`. Таким образом, при создании объекта класса `TriangleChecker` можно передать три значения, которые будут использоваться при проверке треугольности.
+
+2. **Метод `is_triangle`:**
+
+   Метод `is_triangle` выполняет проверку, можно ли построить треугольник по заданным значениям сторон `self.a`, `self.b` и `self.c`. Внутри метода происходят следующие проверки:
+   - Проверяется, что `self.a`, `self.b`, `self.c` являются целыми числами с помощью функции `isinstance()`.
+   - Проверяется, что `self.a`, `self.b`, `self.c` положительны (больше нуля).
+   - Проверяется выполнение условий треугольника: сумма двух сторон больше третьей стороны.
+   - В зависимости от результатов проверок метод возвращает соответствующий текстовый результат: "Hooray, you can build a triangle!" (Треугольник можно построить) или "It's a pity, but you can't make a triangle out of it." (Из этих значений треугольник не получится). Если условия не выполняются, например, если стороны отрицательные, метод вернет соответствующий текст.
+
+3. **Интерактивная часть кода:**
+
+   Далее следует интерактивная часть кода, в которой пользователю предлагается ввести значения для сторон треугольника (`a`, `b`, `c`) с помощью функции `input`. Введенные значения преобразуются в целые числа с помощью функции `int`. Затем создается объект класса `TriangleChecker`, передавая в конструктор (`__init__`) значения `a`, `b` и `c`. Затем вызывается метод `is_triangle` для созданного объекта, результат сохраняется в переменную `result`, и наконец, результат выводится на экран при помощи функции `print`.
+_____________________________________________________________________________________________________________________________________________________________________________________
+
+    elif N == '3':
+       class KgToPounds:
+            def __init__(self, kg):
+                self.__kg = kg
+
+            @property
+            def kg(self):
+                return self.__kg
+
+            @kg.setter
+            def kg(self, new_kg):
+                if isinstance(new_kg, (int, float)):
+                    self.__kg = new_kg
+                else:
+                    raise ValueError("Kilograms are given only by numbers")
+
+            def to_pounds(self):
+                return self.__kg * 2.205
+        
+       print("\nTask #3")
+       kg_input = float(input("Enter the weight in kilograms: "))
+       obj = KgToPounds(kg_input)
+       print("Current weight in kilograms:", obj.kg)
+       new_kg_input = float(input("Enter the new weight in kilograms: "))
+       obj.kg = new_kg_input
+       print("Current weight in kilograms:", obj.kg)
+       print("Equivalent weight in pounds:", obj.to_pounds())
+
+Код представляет класс `KgToPounds`, который преобразует вес из килограммов в фунты. Разберем его поэтапно:
+
+1. `__init__(self, kg)`: Это конструктор класса, который инициализирует объект. Он принимает аргумент `kg`, который представляет вес в килограммах. Затем он сохраняет этот вес в приватной переменной `self.__kg`.
+
+2. `@property`: Декоратор `@property` используется для создания свойства `kg`. Свойство `kg` предоставляет доступ для получения значения приватной переменной `self.__kg`.
+
+3. `@kg.setter`: Декоратор `@kg.setter` определяет сеттер для свойства `kg`. Он позволяет изменять значение переменной `self.__kg`. Если новое значение является числом (целым или вещественным), то оно присваивается `self.__kg`. В противном случае генерируется исключение `ValueError` с сообщением "Kilograms are given only by numbers".
+
+4. `to_pounds(self)`: Метод `to_pounds` выполняет конвертацию веса из килограммов в фунты. Он возвращает результат умножения значения `self.__kg` на 2.205.
+
+В основной части кода:
+- Создается экземпляр класса `KgToPounds` с помощью конструктора, принимая ввод пользователя в переменную `kg_input`.
+- Выводится текущий вес в килограммах с помощью `obj.kg`.
+- Запрашивается новый ввод веса в килограммах и устанавливается с помощью сеттера `obj.kg`.
+- Выводится текущий вес в килограммах и эквивалентный вес в фунтах с помощью `obj.to_pounds()`.
+
+_____________________________________________________________________________________________________________________________________________________________________________________
+
+    elif N == '4':
+      class Nikola:
+        def __init__(self, name, age):
+            self.__name = self.__process_name(name)
+            self.__age = age
+
+        def __process_name(self, name):
+            if name != "Nikolai":
+                return "I am not " + name + ", but Nikolai"
+            return name
+
+        def __getattr__(self, name):
+            raise AttributeError("The attribute or method does not exist")
+
+        def __dir__(self):
+            return ['_Nikola__name', '_Nikola__age']
+
+        def get_name(self):
+            return self.__name
+
+        def get_age(self):
+            return self.__age
+
+      name = input("Enter a name: ")
+      age = int(input("Enter the age: "))
+
+      nikola = Nikola(name, age)
+
+      print(nikola.get_name())  # Вывод обработанного имени
+      print(nikola.get_age())  # Вывод возраста
+
+Данный код представляет класс `Nikola`, который предоставляет функциональность для работы с информацией о человеке по имени Николай. Разберем его поэтапно:
+
+1. `__init__(self, name, age)`: Это конструктор класса `Nikola`. Он принимает два аргумента: `name` (имя) и `age` (возраст). Внутри конструктора происходит инициализация двух приватных переменных: `self.__name` и `self.__age`. Значение `name` передается в метод `self.__process_name` для обработки.
+
+2. `__process_name(self, name)`: Это приватный метод класса `Nikola`, который принимает имя `name`. Он проверяет, если имя не равно "Nikolai", то возвращает строку "I am not " + name + ", but Nikolai", иначе возвращает само имя. Этот метод используется в конструкторе для обработки имени перед сохранением в `self.__name`.
+
+3. `__getattr__(self, name)`: Это метод, вызываемый, когда запрашивается атрибут или метод, которого нет у объекта. В данном случае, если запрашивается несуществующий атрибут или метод, генерируется исключение `AttributeError` с сообщением "The attribute or method does not exist".
+
+4. `__dir__(self)`: Это метод, который определяет пользовательский вывод при вызове функции `dir()` на объекте. В данном случае, он возвращает список строк, содержащих имена приватных переменных `self.__name` и `self.__age`, добавляя префикс `_Nikola__` для указания приватности этих переменных.
+
+5. `get_name(self)` и `get_age(self)`: Это публичные методы, которые возвращают значения приватных переменных `self.__name` и `self.__age` соответственно.
+
+В основной части кода:
+- Запрашивается ввод имени и возраста у пользователя.
+- Создается экземпляр класса `Nikola` с помощью конструктора, передавая введенные значения имени и возраста.
+- Выводится обработанное имя с помощью метода `nikola.get_name()`.
+- Выводится возраст с помощью метода `nikola.get_age()`.
+_____________________________________________________________________________________________________________________________________________________________________________________
+
+    elif N == '5':
+        class RealString:
+            def __init__(self, string):
+                self.string = string
+
+            def __len__(self):
+                return len(self.string)
+
+            def __lt__(self, other):
+                return len(self) < len(other)
+
+            def __gt__(self, other):
+                return len(self) > len(other)
+            
+        print("\nTask #5")
+        user_input = input("Enter the line: ")
+        real_string = RealString(user_input)
+        print("String length: ", len(real_string))
+        print("Comparison with another string:")
+        other_input = input("Enter another line: ")
+        if real_string < other_input:
+            print("String", real_string.string, "less than a string", other_input)
+        elif real_string > other_input:
+            print("String", real_string.string, "more string", other_input)
+        else:
+            print("The strings are equal in length")
+
+В этом коде определен класс `RealString`, который представляет строку и обеспечивает некоторые операции и сравнения. Рассмотрим его подробнее:
+
+1. `__init__(self, string)`: Это конструктор класса `RealString`. Он принимает один аргумент `string` (строка) и сохраняет его в переменной экземпляра `self.string`.
+
+2. `__len__(self)`: Это метод, который определяет поведение при вызове функции `len()` на объекте `RealString`. В данном случае, он возвращает длину строки `self.string`.
+
+3. `__lt__(self, other)`: Это метод сравнения меньше, переопределяющий оператор `<`. Он принимает второй аргумент `other` (другую строку) и сравнивает длину текущей строки `self.string` с длиной `other` строки. Если длина текущей строки меньше, метод возвращает `True`, иначе `False`.
+
+4. `__gt__(self, other)`: Это метод сравнения больше, переопределяющий оператор `>`. Он аналогичен методу `__lt__`, но сравнивает текущую строку с `other` строкой на большую длину.
+
+В основной части кода:
+- Запрашивается ввод строки у пользователя.
+- Создается экземпляр класса `RealString` с введенной строкой с помощью конструктора.
+- Выводится длина строки с помощью функции `len(real_string)`.
+- Запрашивается еще одна строка у пользователя.
+- Происходит сравнение длин этих строк с использованием операторов `<` и `>`, и выводится соответствующий результат в зависимости от результата сравнения. Если строки равны по длине, выводится сообщение "The strings are equal in length".
+_____________________________________________________________________________________________________________________________________________________________________________________
+
+    elif N == '6':
+      class Transaction:
+        def __init__(self, amount, date, currency='USD', usd_conversion_rate=1, description=None):
+            self.__amount = amount
+            self.__date = date
+            self.__currency = currency
+            self.__usd_conversion_rate = usd_conversion_rate
+            self.__description = description
+
+        @property
+        def amount(self):
+            return self.__amount
+
+        @property
+        def date(self):
+            return self.__date
+
+        @property
+        def currency(self):
+            return self.__currency
+
+        @property
+        def usd_conversion_rate(self):
+            return self.__usd_conversion_rate
+
+        @property
+        def description(self):
+            return self.__description
+
+        @property
+        def usd(self):
+            return self.__amount * self.__usd_conversion_rate
+
+       # Пример использования класса Transaction
+      transaction = Transaction(100, '2021-09-01', 'EUR', 0.85, 'Payment')
+      print(transaction.amount)  # 100
+      print(transaction.date)  # '2021-09-01'
+      print(transaction.currency)  # 'EUR'
+      print(transaction.usd_conversion_rate)  # 0.85
+      print(transaction.description)  # 'Payment'
+      print(transaction.usd)  # 85.0
+
+В коде определен класс `Transaction`, который представляет транзакцию с определенными свойствами и методами. Рассмотрим его подробнее:
+
+1. `__init__(self, amount, date, currency='USD', usd_conversion_rate=1, description=None)`: Это конструктор класса `Transaction`. Он принимает несколько аргументов: `amount` (сумма), `date` (дата), `currency` (валюта) - по умолчанию 'USD', `usd_conversion_rate` (курс конвертации в USD) - по умолчанию 1, `description` (описание) - по умолчанию None. Внутри конструктора, значения аргументов сохраняются в соответствующих переменных экземпляра с префиксом двойного подчеркивания `__`, что говорит о том, что эти переменные являются приватными.
+
+2. Аннотации `@property` и методы, такие как `amount`, `date`, `currency`, `usd_conversion_rate`, `description` и `usd`: Эти методы являются getter-ами для доступа к приватным переменным экземпляра. Они обеспечивают доступ к значениям приватных переменных класса без прямого доступа к ним. То есть вместо `transaction.__amount`, мы можем использовать `transaction.amount` для получения значения суммы. 
+
+3. `usd(self)`: Этот метод также является getter-ом, но он возвращает результат вычисления, а именно - умножение суммы на курс конвертации в USD. Таким образом, `transaction.usd` возвращает конвертированную в USD сумму.
+
+В основной части кода:
+- Создается экземпляр класса `Transaction` с определенными значениями аргументов.
+- Затем выводятся значения различных свойств объекта `transaction`, используя соответствующие геттеры.
+- `transaction.amount` возвращает 100, `transaction.date` - '2021-09-01', `transaction.currency` - 'EUR', `transaction.usd_conversion_rate` - 0.85, `transaction.description` - 'Payment', `transaction.usd` - 85.0 (вычисленное значение на основе суммы и курса конвертации).
+_____________________________________________________________________________________________________________________________________________________________________________________
+
+    elif N == '7':      
+        class Transaction:
+            def __init__(self, amount, date, currency="USD", description=None):
+                # Хранение данных о транзакции
+                self._amount = amount
+                self._date = date
+                self._currency = currency
+                self._description = description
+
+            @property
+            def amount(self):
+                # Свойство для чтения суммы транзакции
+                return self._amount
+
+            @property
+            def date(self):
+                # Свойство для чтения даты транзакции
+                return self._date
+
+            @property
+            def currency(self):
+                # Свойство для чтения валюты транзакции
+                return self._currency
+
+            @property
+            def description(self):
+                # Свойство для чтения описания транзакции
+                return self._description
+
+            @property
+            def usd(self):
+                # Свойство для чтения эквивалента транзакции в долларах
+                return self._amount * self._usd_conversion_rate
+
+
+        class Account:
+            def __init__(self, account_number, account_name):
+                # Хранение данных о счете и транзакциях
+                self.__account_number = account_number
+                self.__account_name = account_name
+                self.__transactions = []
+
+            @property
+            def account_number(self):
+                # Свойство для чтения номера счета
+                return self.__account_number
+
+            @property
+            def account_name(self):
+                # Свойство для чтения названия счета
+                return self.__account_name
+
+            @account_name.setter
+            def account_name(self, name):
+                # Свойство для записи названия счета с проверкой длины
+                if len(name) >= 4:
+                    self.__account_name = name
+                else:
+                    raise ValueError("Account name should be at least 4 characters long.")
+
+            def __len__(self):
+                # Встроенная функция len() возвращает количество транзакций
+                return len(self.__transactions)
+
+            @property
+            def balance(self):
+                usd_transactions = [t for t in self.__transactions if t.currency == "USD"]
+                return sum(t.amount for t in usd_transactions)
+
+            @property
+            def all_usd(self):
+                # Свойство для проверки, все ли транзакции выполнены в долларах
+                return all(t.currency == "USD" for t in self.__transactions)
+
+            def add_transaction(self):
+                # Метод для пользовательского ввода и добавления новой транзакции
+                amount = float(input("Enter transaction amount: "))
+                date = input("Enter transaction date (YYYY-MM-DD): ")
+                currency = input("Enter transaction currency: ")
+                description = input("Enter transaction description (optional): ")
+
+                transaction = Transaction(amount, date, currency, description)
+                self.__transactions.append(transaction)
+
+            def save(self):
+                # Метод для сохранения данных счета
+                data = {
+                    "account_number": self.__account_number,
+                    "account_name": self.__account_name,
+                    "transactions": self.__transactions,
+                }
+                file_name = self.__get_save_file_name()
+                with open(file_name, "wb") as file:
+                    pickle.dump(data, file)
+
+            def load(self):
+                # Метод для загрузки данных счета
+                file_name = self.__get_save_file_name()
+                if os.path.exists(file_name):
+                    with open(file_name, "rb") as file:
+                        data = pickle.load(file)
+                        self.__account_number = data["account_number"]
+                        self.__account_name = data["account_name"]
+                        self.__transactions = data["transactions"]
+
+            def __get_save_file_name(self):
+                return r"C:\files\{}.acc".format(self.__account_number)
+
+
+        # Создание аккаунта с номером счета и названием
+        account = Account(account_number="1", account_name="My account")
+
+        # Добавление пользовательских транзакций
+        while True:
+            choice = input("Add a transaction? (y/n): ")
+            if choice.lower() == "y":
+                account.add_transaction()
+            else:
+                break
+
+        account.save()
+
+        # Печать некоторой информации о счете и транзакциях
+        print(f"Account Number: {account.account_number}")
+        print(f"Account Name: {account.account_name}")
+        print(f"Number of Transactions: {len(account)}")
+        print(f"Balance: ${account.balance}")
+        print(f"All transactions in USD: {account.all_usd}")
+    else:
+        print("\nInvalid issue number. Please select from 1 to 7 or enter 'q' to exit.\n")
+
+В данном коде определены два класса: `Transaction` и `Account`. 
+Рассмотрим их подробнее:
+
+1. Класс `Transaction`:
+   - `__init__(self, amount, date, currency="USD", description=None)`: Это конструктор класса `Transaction`. Он инициализирует объекты этого класса с параметрами `amount` (сумма), `date` (дата), `currency` (валюта) со значением по умолчанию "USD" и `description` (описание) со значением по умолчанию None. Значения этих параметров сохраняются в соответствующих переменных экземпляра класса.
+   - `@property`: Декоратор `@property` используется для определения методов-геттеров, которые позволяют получить значения приватных переменных экземпляра класса.
+   - `amount`, `date`, `currency`, `description`: Это методы-геттеры, которые возвращают значения приватных переменных экземпляра класса.
+   - `usd`: Это также метод-геттер, который возвращает результат вычисления - умножение суммы на переменную `_usd_conversion_rate`.
+
+2. Класс `Account`:
+   - `__init__(self, account_number, account_name)`: Это конструктор класса `Account`. Он инициализирует объекты этого класса с параметрами `account_number` (номер счета) и `account_name` (название счета). Кроме того, он также инициализирует список `__transactions` для хранения объектов класса `Transaction`.
+   - `@property`: Декоратор `@property` используется для определения методов-геттеров.
+   - `account_number`, `account_name`: Методы-геттеры, которые возвращают значения приватных переменных экземпляра класса.
+   - `account_name.setter`: Декоратор `@account_name.setter` определяет метод-сеттер для переменной `account_name`. Он позволяет установить значение `account_name` с проверкой длины имени.
+   - `__len__(self)`: Это метод-магический метод `__len__`, который переопределяет встроенную функцию `len()`. Он возвращает количество транзакций, хранящихся в списке `__transactions`.
+   - `balance`: Это свойство-геттер, которое вычисляет и возвращает баланс счета в USD. Оно фильтрует транзакции, выбирает только те, которые выполнены в USD, и вычисляет сумму этих транзакций.
+   - `all_usd`: Это свойство-геттер, которое проверяет, все ли транзакции выполнены в USD. Оно возвращает `True`, если у всех транзакций в списке `__transactions` валюта равна "USD", иначе возвращает `False`.
+   - `add_transaction(self)`: Это метод, который запрашивает у пользователя информацию о новой транзакции (сумма, дата, валюта, описание), создает объект класса `Transaction` с полученными значениями и добавляет его в список `__transactions`.
+   - `save(self)`: Это метод, который сохраняет данные аккаунта (`account_number`, `account_name`, `transactions`) в файле.
+   - `load(self)`: Это метод, который загружает данные аккаунта из файла, если файл существует. Загруженные данные присваиваются соответствующим переменным экземпляра класса.
+   - `__get_save_file_name(self)`: Это вспомогательный метод, который возвращает имя файла для сохранения/загрузки данных аккаунта.
+
+Затем в основной части кода:
+- Создается объект класса `Account` с определенными значениями `account_number` и `account_name`.
+- Затем запрашивается у пользователя добавление новых транзакций для этого счета с помощью метода `add_transaction()`.
+- Различные свойства и методы объекта `account` используются для печати информации о счете и транзакциях, таких как номер счета (`account_number`), название счета (`account_name`), количество транзакций (`len(account)`), баланс (`balance`) и информация об использовании только долларовых транзакций (`all_usd`).
+
+_____________________________________________________________________________________________________________________________________________________________________________________
